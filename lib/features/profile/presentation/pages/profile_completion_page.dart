@@ -1146,7 +1146,15 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
         ),
       );
       
-      // Navigate to home
+      // Navigate to home with delay to ensure context is ready 
+      print('🏠 PROFILE_COMPLETION: Attempting navigation to home...');
+      
+      // Use Future.delayed to ensure navigation happens after current frame
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
+      print('🏠 PROFILE_COMPLETION: Navigating to /home');
       context.go('/home');
     } catch (e) {
       // Check if widget is still mounted
