@@ -1,0 +1,107 @@
+name: recruitu_app
+description: "RecruitU - College Soccer Player-Coach Matching Platform"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core Framework
+  flutter_bloc: ^8.1.6                 # State management
+  provider: ^6.1.2                     # Secondary state management
+  equatable: ^2.0.5                    # Value equality
+  go_router: ^14.6.2                   # Declarative routing
+  get_it: ^8.0.3                       # Dependency injection
+
+  # Firebase Backend
+  firebase_core: ^3.8.0                # Firebase initialization
+  firebase_auth: ^5.3.3                # Authentication
+  cloud_firestore: ^5.4.8              # NoSQL database
+  firebase_storage: ^12.3.7            # File storage
+  firebase_analytics: ^11.3.3          # Analytics
+  firebase_remote_config: ^5.1.3       # Feature flags
+
+  # Networking & Data
+  dio: ^5.7.0                          # HTTP client
+  shared_preferences: ^2.3.4           # Simple storage
+  hive: ^2.2.3                         # Local database
+  hive_flutter: ^1.1.0                 # Hive Flutter integration
+  flutter_secure_storage: ^9.2.2       # Secure storage
+
+  # UI Components
+  google_fonts: ^6.2.1                 # Typography
+  flutter_svg: ^2.0.10+1               # SVG support
+  cached_network_image: ^3.4.1         # Image caching
+  shimmer: ^3.0.0                      # Loading animations
+  card_swiper: ^3.0.1                  # Tinder-like swiping
+  image_picker: ^1.1.2                 # Photo selection
+  video_player: ^2.9.2                 # Video playback
+  flutter_image_compress: ^2.3.0       # Image compression
+
+  # Utilities
+  intl: ^0.19.0                        # Internationalization
+  path_provider: ^2.1.4                # File system paths
+  url_launcher: ^6.3.1                 # External URLs
+  flutter_dotenv: ^5.1.0               # Environment variables
+  uuid: ^4.5.1                         # UUID generation
+  permission_handler: ^11.3.1          # Permissions
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0                # Linting rules
+  build_runner: ^2.4.12                # Code generation
+  integration_test:
+    sdk: flutter
+  bloc_test: ^9.1.7                    # BLoC testing utilities
+  mockito: ^5.4.4                      # Mocking framework
+  fake_cloud_firestore: ^3.0.3         # Firestore mocking
+  firebase_auth_mocks: ^0.14.1         # Firebase Auth mocking
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/images/soccer_coach1.jpeg
+    - assets/images/soccer_coach2.jpeg
+    - assets/images/soccer_coach3.jpeg
+    - assets/images/soccer_coach4.jpg
+    - assets/icons/
+    - .env
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

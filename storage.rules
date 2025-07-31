@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Users can upload and manage their own profile images
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can upload and manage their own media content
+    match /users/{userId}/media/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Public profile images are readable by all authenticated users
+    match /public/profiles/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Users can upload to public profiles
+    }
+    
+    // Chat media files - accessible to chat participants
+    match /chats/{chatId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+      // TODO: Add proper participant validation once chat structure is defined
+    }
+  }
+}
