@@ -128,6 +128,12 @@ class CoachProfileModel extends CoachProfileEntity {
       yearsCoaching: formData['yearsCoaching'] != null 
           ? int.tryParse(formData['yearsCoaching']) 
           : null,
+      recruitingPositions: const [], // Initialize empty list
+      targetRegions: const [], // Initialize empty list
+      programAchievements: const [], // Initialize empty list
+      programPhotos: const [], // Initialize empty list
+      facilityPhotos: const [], // Initialize empty list
+      teamVideos: const [], // Initialize empty list
       isPublic: true, // Default to public for discovery
       createdAt: now,
       updatedAt: now,

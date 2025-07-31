@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/create_profile_from_form_usecase.dart';
@@ -1146,10 +1147,7 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
       );
       
       // Navigate to home
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/home',
-        (route) => false,
-      );
+      context.go('/home');
     } catch (e) {
       // Check if widget is still mounted
       if (!mounted) return;

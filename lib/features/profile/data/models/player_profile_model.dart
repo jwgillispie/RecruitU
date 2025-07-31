@@ -112,7 +112,14 @@ class PlayerProfileModel extends PlayerProfileEntity {
       gpa: formData['gpa'] != null ? double.tryParse(formData['gpa']) : null,
       graduationYear: formData['graduationYear'],
       primaryPosition: formData['primaryPosition'] ?? SoccerPosition.st,
+      secondaryPositions: const [], // Initialize empty list
+      achievements: const [], // Initialize empty list
+      previousTeams: const [], // Initialize empty list
+      videoHighlights: const [], // Initialize empty list
       additionalPhotos: additionalPhotos ?? [],
+      achievementCertificates: const [], // Initialize empty list
+      targetDivisions: const [], // Initialize empty list
+      targetRegions: const [], // Initialize empty list
       isPublic: true, // Default to public for discovery
       createdAt: now,
       updatedAt: now,
