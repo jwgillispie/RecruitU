@@ -227,6 +227,7 @@ class _ChatListPageState extends State<ChatListPage>
             ),
           ),
         ),
+        bottomNavigationBar: const RecruitUBottomNavigationBar(currentIndex: 3),
       ),
     );
   }

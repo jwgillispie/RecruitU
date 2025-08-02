@@ -11,6 +11,7 @@ import '../bloc/chat_state.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/message_input.dart';
 import '../widgets/chat_app_bar.dart';
+import '../../../../shared/widgets/bottom_navigation_bar.dart';
 
 /// Main chat screen for conversation between matched users  
 class ChatScreen extends StatefulWidget {
@@ -238,6 +239,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
           ),
         ),
+        bottomNavigationBar: const RecruitUBottomNavigationBar(currentIndex: 3),
       ),
     );
   }
