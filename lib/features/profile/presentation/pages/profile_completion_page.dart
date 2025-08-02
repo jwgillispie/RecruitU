@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/create_profile_from_form_usecase.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../widgets/photo_upload_widget.dart';
 import '../widgets/photo_gallery_widget.dart';
 
@@ -730,9 +732,16 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
                 ),
               ),
               child: ElevatedButton(
-                onPressed: _currentStep < _steps.length - 1
-                    ? _goToNextStep
-                    : _completeOnboarding,
+                onPressed: () {
+                  print('🔥 BUTTON_PRESSED: Current step: $_currentStep, Steps length: ${_steps.length}');
+                  if (_currentStep < _steps.length - 1) {
+                    print('🔥 BUTTON_PRESSED: Calling _goToNextStep');
+                    _goToNextStep();
+                  } else {
+                    print('🔥 BUTTON_PRESSED: Calling _completeOnboarding');
+                    _completeOnboarding();
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -744,7 +753,7 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
                 child: Text(
                   _currentStep < _steps.length - 1
                       ? (_currentStep == 0 ? 'Get Started' : 'Continue')
-                      : 'Complete Profile',
+                      : 'Go to Home',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -1073,41 +1082,42 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
   }
 
   void _completeOnboarding() async {
+    print('🏠 PROFILE_COMPLETION: _completeOnboarding called, current step: $_currentStep');
     HapticFeedback.mediumImpact();
     
+    // Update profile completion status FIRST to prevent redirect loop
     try {
-      // Show loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Text(
-                'Creating your profile...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF4CAF50),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 10), // Long duration while creating
-        ),
-      );
+      final authRepository = ServiceLocator.instance<AuthRepository>();
+      await authRepository.updateProfileCompletionStatus(widget.userId, true);
+      print('🏠 PROFILE_COMPLETION: Profile completion status updated BEFORE navigation');
+    } catch (e) {
+      print('🏠 PROFILE_COMPLETION: Failed to update profile completion status: $e');
+    }
+    
+    // Navigate to home after updating status
+    print('🏠 PROFILE_COMPLETION: Navigating to home...');
+    context.go('/home');
+    
+    // Create profile in background (don't await)
+    _createProfileInBackground();
+  }
+
+  void _createProfileInBackground() async {
+    try {
+      // Check if profile already exists before creating
+      final profileRepository = ServiceLocator.instance<ProfileRepository>();
+      
+      bool profileExists = false;
+      if (widget.userType == UserType.player) {
+        profileExists = await profileRepository.playerProfileExists(widget.userId);
+      } else {
+        profileExists = await profileRepository.coachProfileExists(widget.userId);
+      }
+      
+      if (profileExists) {
+        print('🏠 PROFILE_COMPLETION: Profile already exists for user ${widget.userId}, skipping creation');
+        return;
+      }
       
       // Save profile data to Firestore
       final createProfileUseCase = ServiceLocator.instance<CreateProfileFromFormUseCase>();
@@ -1119,68 +1129,9 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
         formData: _formData,
       );
       
-      // Check if widget is still mounted
-      if (!mounted) return;
-      
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.userType == UserType.player
-                ? 'Player profile created successfully!'
-                : 'Coach profile created successfully!',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: const Color(0xFF4CAF50),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-      
-      // Navigate to home with delay to ensure context is ready 
-      print('🏠 PROFILE_COMPLETION: Attempting navigation to home...');
-      
-      // Use Future.delayed to ensure navigation happens after current frame
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      if (!mounted) return;
-      
-      print('🏠 PROFILE_COMPLETION: Navigating to /home');
-      context.go('/home');
+      print('🏠 PROFILE_COMPLETION: Profile created successfully in background');
     } catch (e) {
-      // Check if widget is still mounted
-      if (!mounted) return;
-      
-      // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to create profile: ${e.toString()}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: const Color(0xFFE53E3E),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      print('🏠 PROFILE_COMPLETION: Failed to create profile in background: $e');
     }
   }
 
