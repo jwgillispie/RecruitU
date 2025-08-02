@@ -65,14 +65,31 @@ class AppRouter {
         
         if (authState is AuthAuthenticated) {
           print('🚦 ROUTER: User authenticated - checking route');
+          print('🚦 ROUTER: Current location: ${state.matchedLocation}');
+          print('🚦 ROUTER: Is public route: $isPublicRoute');
+          print('🚦 ROUTER: User profile complete: ${authState.user.isProfileComplete}');
           
-          // If user is on public route, redirect to home
+          // If user is on public route, redirect based on profile completion
           if (isPublicRoute) {
-            print('🚦 ROUTER: Redirecting authenticated user from ${state.matchedLocation} to /home');
-            return '/home';
+            if (!authState.user.isProfileComplete) {
+              print('🚦 ROUTER: Redirecting new user to profile completion');
+              return '/profile-completion';
+            } else {
+              print('🚦 ROUTER: Redirecting authenticated user from ${state.matchedLocation} to /home');
+              return '/home';
+            }
+          }
+          
+          // If profile is not complete, only allow profile completion route
+          if (!authState.user.isProfileComplete) {
+            if (state.matchedLocation != '/profile-completion') {
+              print('🚦 ROUTER: Profile incomplete - forcing profile completion');
+              return '/profile-completion';
+            }
           }
           
           // Allow authenticated users to access all routes
+          print('🚦 ROUTER: Allowing authenticated user access to ${state.matchedLocation}');
           return null;
         }
         
@@ -147,12 +164,25 @@ class AppRouter {
           path: '/profile-completion',
           name: 'profile-completion',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            return ProfileCompletionPage(
-              userType: extra?['userType'] ?? UserType.player,
-              userId: extra?['userId'] ?? '',
-              displayName: extra?['displayName'] ?? '',
-            );
+            final authBloc = ServiceLocator.instance<AuthBloc>();
+            final authState = authBloc.state;
+            
+            // Get user info from auth state or fallback to extra params
+            if (authState is AuthAuthenticated) {
+              return ProfileCompletionPage(
+                userType: authState.user.userType,
+                userId: authState.user.id,
+                displayName: authState.user.displayName,
+              );
+            } else {
+              // Fallback for cases where user data is passed as extra
+              final extra = state.extra as Map<String, dynamic>?;
+              return ProfileCompletionPage(
+                userType: extra?['userType'] ?? UserType.player,
+                userId: extra?['userId'] ?? '',
+                displayName: extra?['displayName'] ?? '',
+              );
+            }
           },
         ),
         

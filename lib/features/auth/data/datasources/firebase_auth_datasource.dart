@@ -273,6 +273,27 @@ class FirebaseAuthDataSource {
     }
   }
 
+  /// Update user profile completion status
+  Future<void> updateProfileCompletionStatus(String userId, bool isComplete) async {
+    try {
+      print('🔥 FIREBASE_DATASOURCE: Updating profile completion status for user: $userId');
+      print('🔥 FIREBASE_DATASOURCE: Setting isProfileComplete to: $isComplete');
+      
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .update({
+        'isProfileComplete': isComplete,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      print('🔥 FIREBASE_DATASOURCE: Profile completion status updated successfully');
+    } catch (e) {
+      print('🔥 FIREBASE_DATASOURCE: Error updating profile completion status: $e');
+      throw Exception('Failed to update profile completion status: $e');
+    }
+  }
+
   /// Map FirebaseAuthException to readable error messages
   Exception _mapFirebaseAuthException(FirebaseAuthException e) {
     switch (e.code) {

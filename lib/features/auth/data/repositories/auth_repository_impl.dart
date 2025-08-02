@@ -93,4 +93,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> reauthenticateWithPassword(String password) async {
     await _dataSource.reauthenticateWithPassword(password);
   }
+
+  @override
+  Future<void> updateProfileCompletionStatus(String userId, bool isComplete) async {
+    await _dataSource.updateProfileCompletionStatus(userId, isComplete);
+  }
 }

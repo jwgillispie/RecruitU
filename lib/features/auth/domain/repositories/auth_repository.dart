@@ -43,4 +43,7 @@ abstract class AuthRepository {
   
   /// Reauthenticate user with password
   Future<void> reauthenticateWithPassword(String password);
+  
+  /// Update user profile completion status
+  Future<void> updateProfileCompletionStatus(String userId, bool isComplete);
 }

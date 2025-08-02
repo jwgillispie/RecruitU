@@ -104,3 +104,6 @@ class AuthAccountDeletionRequested extends AuthEvent {
   @override
   List<Object> get props => [password];
 }
+
+/// Event for refreshing current user data
+class AuthRefreshRequested extends AuthEvent {}

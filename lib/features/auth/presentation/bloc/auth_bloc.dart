@@ -35,6 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailUpdateRequested>(_onEmailUpdateRequested);
     on<AuthPasswordUpdateRequested>(_onPasswordUpdateRequested);
     on<AuthAccountDeletionRequested>(_onAccountDeletionRequested);
+    on<AuthRefreshRequested>(_onAuthRefreshRequested);
   }
 
   /// Handle app started event
@@ -243,6 +244,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAccountDeleted());
     } catch (e) {
       emit(AuthError(e.toString()));
+    }
+  }
+
+  /// Handle auth refresh request
+  Future<void> _onAuthRefreshRequested(
+    AuthRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      print('🔄 AUTH_BLOC: Auth refresh requested');
+      
+      // Get current user and refresh their data
+      if (state is AuthAuthenticated) {
+        final refreshedUser = await _authRepository.getCurrentUser();
+        
+        if (refreshedUser != null) {
+          print('🔄 AUTH_BLOC: User data refreshed successfully');
+          emit(AuthAuthenticated(refreshedUser));
+        } else {
+          print('🔄 AUTH_BLOC: No user found during refresh, logging out');
+          emit(AuthUnauthenticated());
+        }
+      } else {
+        print('🔄 AUTH_BLOC: Not authenticated, checking for current user');
+        final currentUser = await _authRepository.getCurrentUser();
+        
+        if (currentUser != null) {
+          print('🔄 AUTH_BLOC: Found authenticated user during refresh');
+          emit(AuthAuthenticated(currentUser));
+        }
+      }
+    } catch (e) {
+      print('🔄 AUTH_BLOC: Failed to refresh auth state: $e');
+      // Don't emit error state for refresh failures, keep current state
     }
   }
 

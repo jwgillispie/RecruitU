@@ -6,6 +6,8 @@ import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/create_profile_from_form_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../widgets/photo_upload_widget.dart';
 import '../widgets/photo_gallery_widget.dart';
 
@@ -39,6 +41,7 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
   
   // Completion tracking
   double _completionPercentage = 0.0;
+  bool _isCompleting = false;
 
   @override
   void initState() {
@@ -732,7 +735,7 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
                 ),
               ),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: _isCompleting ? null : () {
                   print('🔥 BUTTON_PRESSED: Current step: $_currentStep, Steps length: ${_steps.length}');
                   if (_currentStep < _steps.length - 1) {
                     print('🔥 BUTTON_PRESSED: Calling _goToNextStep');
@@ -750,16 +753,39 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text(
-                  _currentStep < _steps.length - 1
-                      ? (_currentStep == 0 ? 'Get Started' : 'Continue')
-                      : 'Go to Home',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _isCompleting && _currentStep == _steps.length - 1
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Completing...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        _currentStep < _steps.length - 1
+                            ? (_currentStep == 0 ? 'Get Started' : 'Continue')
+                            : 'Go to Home',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -1085,21 +1111,127 @@ class _ProfileCompletionPageState extends State<ProfileCompletionPage>
     print('🏠 PROFILE_COMPLETION: _completeOnboarding called, current step: $_currentStep');
     HapticFeedback.mediumImpact();
     
-    // Update profile completion status FIRST to prevent redirect loop
     try {
+      // Show loading indicator
+      setState(() {
+        _isCompleting = true;
+      });
+      
+      // Update profile completion status FIRST to prevent redirect loop
       final authRepository = ServiceLocator.instance<AuthRepository>();
       await authRepository.updateProfileCompletionStatus(widget.userId, true);
-      print('🏠 PROFILE_COMPLETION: Profile completion status updated BEFORE navigation');
+      print('🏠 PROFILE_COMPLETION: Profile completion status updated');
+      
+      // Force auth state refresh to ensure router knows about completion
+      final authBloc = ServiceLocator.instance<AuthBloc>();
+      authBloc.add(AuthRefreshRequested());
+      
+      // Wait a moment for auth state to propagate
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Navigate with error handling
+      if (mounted) {
+        print('🏠 PROFILE_COMPLETION: Attempting navigation to home...');
+        await _navigateToHome();
+      }
+      
+      // Create profile in background (don't await)
+      _createProfileInBackground();
+      
     } catch (e) {
-      print('🏠 PROFILE_COMPLETION: Failed to update profile completion status: $e');
+      print('🏠 PROFILE_COMPLETION: Error in completion: $e');
+      
+      // Fallback navigation methods
+      if (mounted) {
+        await _navigateToHome();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCompleting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _navigateToHome() async {
+    final List<Future<void> Function()> navigationMethods = [
+      // Method 1: GoRouter
+      () async {
+        context.go('/home');
+        await Future.delayed(const Duration(milliseconds: 300));
+      },
+      
+      // Method 2: Navigator pushReplacement
+      () async {
+        Navigator.of(context).pushReplacementNamed('/home');
+        await Future.delayed(const Duration(milliseconds: 300));
+      },
+      
+      // Method 3: Navigator pushAndRemoveUntil
+      () async {
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        await Future.delayed(const Duration(milliseconds: 300));
+      },
+    ];
+    
+    // Try each method until one succeeds
+    for (int i = 0; i < navigationMethods.length; i++) {
+      try {
+        print('🚀 NAVIGATION: Trying method ${i + 1}');
+        await navigationMethods[i]();
+        
+        // Check if navigation was successful by waiting a bit
+        await Future.delayed(const Duration(milliseconds: 500));
+        print('🚀 NAVIGATION: Method ${i + 1} completed');
+        return; // Exit on first successful attempt
+      } catch (e) {
+        print('🚀 NAVIGATION: Method ${i + 1} failed: $e');
+        continue;
+      }
     }
     
-    // Navigate to home after updating status
-    print('🏠 PROFILE_COMPLETION: Navigating to home...');
-    context.go('/home');
-    
-    // Create profile in background (don't await)
-    _createProfileInBackground();
+    print('🚀 NAVIGATION: All methods attempted, showing error dialog');
+    _showNavigationErrorDialog();
+  }
+
+  void _showNavigationErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        title: const Text(
+          'Navigation Issue',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Having trouble navigating to the home screen. Would you like to try again?',
+          style: TextStyle(color: Color(0xFF9E9E9E)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/home');
+            },
+            child: const Text(
+              'Retry',
+              style: TextStyle(color: Color(0xFF4CAF50)),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+            },
+            child: const Text(
+              'Force Navigate',
+              style: TextStyle(color: Color(0xFF4CAF50)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _createProfileInBackground() async {
