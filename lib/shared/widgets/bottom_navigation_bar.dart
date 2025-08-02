@@ -46,13 +46,7 @@ class RecruitUBottomNavigationBar extends StatelessWidget {
               context.go('/chats');
               break;
             case 4:
-              // TODO: Navigate to profile
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Profile view coming soon!'),
-                  backgroundColor: Color(0xFF4CAF50),
-                ),
-              );
+              context.go('/profile');
               break;
           }
         },

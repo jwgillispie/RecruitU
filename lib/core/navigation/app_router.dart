@@ -7,6 +7,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/profile/presentation/pages/profile_completion_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/discovery/presentation/pages/discovery_page.dart';
 import '../../features/matching/presentation/pages/matches_page.dart';
 import '../../features/chat/presentation/pages/chat_list_page.dart';
@@ -157,6 +158,13 @@ class AppRouter {
           path: '/matches',
           name: 'matches',
           builder: (context, state) => const MatchesPage(),
+        ),
+        
+        // Profile route (protected)
+        GoRoute(
+          path: '/profile',
+          name: 'profile',
+          builder: (context, state) => const ProfilePage(),
         ),
         
         // Profile completion route (protected)
